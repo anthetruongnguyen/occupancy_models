@@ -208,7 +208,7 @@ ct_points <- SpatialPointsDataFrame(ct_coords,
 wd_model <- "D:/Dropbox (ScreenForBio)/Projects/Vietnam 2017-2019/SBC project/Occupancy testing"
 setwd(wd_model)
 elevation <- raster("elevation.tif")
-fs <- raster("forest_score.tif")
+fs <- raster("forest_score_30m.tif")
 d_roads <- raster("roads_distance_30m.tif")
 
 # extract values/covariates from rasters/stracked raster #
@@ -244,7 +244,7 @@ covs_table <- read.csv("gis_covariates.csv")
 
 # scale numeric values
 
-covtable_scaled <- scale(covs_table[,seq(3,5)])
+covtable_scaled <- scale(covs_table[,seq(2,4)])
 covtable_scaled <- as.data.frame(covtable_scaled)
 
 
@@ -291,7 +291,7 @@ m7 <- occu(~ 1 ~fs + d_roads + elevation, data=uf_occu1)
 
 #load rasters
 elevation <- raster("elevation.tif")
-fs <- raster("forest_score.tif")
+fs <- raster("forest_score_30m.tif")
 d_roads <- raster("roads_distance_30m.tif")
 
 #get covariates value for prediction (e.g. d_roads) #
