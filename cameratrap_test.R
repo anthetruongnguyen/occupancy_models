@@ -187,7 +187,7 @@ acti.sp1.sp2 <- activityOverlap(recordTable,
 ################################## OCCUPANCY MODELS ##############################################
 
 ### get covariates from GIS raster ###
-
+setwd(wd_SBC)
 library(raster)
 library(rgdal)
 library(rgeos)
@@ -195,52 +195,56 @@ library(ggplot2)
 library(reshape2)
 
 # get points from CT table #
-CTtable <- read.csv(".csv")
-CTtable <- as.data.frame(CTtable)
+#CTtable <- read.csv(".csv")
 #CTtable <- as.data.frame(CTtable)
-ct_coords <- data.frame(CTtable$UTM_N, CTtable$UTM_E)
+ct_coords <- data.frame(CTtable$X, CTtable$Y)
 ct_points <- SpatialPoints(ct_coords) 
 ct_points <- SpatialPointsDataFrame(ct_coords,
-                                    data = CTtable[,seq(1, 15)], # add information (get from CTtable) to points 
+                                    data = CTtable[,seq(1, 6)], # add information (get from CTtable) to points 
                                     proj4string=  CRS("+proj=utm +zone=48 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0")) 
 
 
 # load raster #
-wd_raster <- "D:/Dropbox (ScreenForBio)/Projects/Vietnam 2017-2019/SBC project/Occupancy testing"
-setwd(wd_raster)
+wd_model <- "D:/Dropbox (ScreenForBio)/Projects/Vietnam 2017-2019/SBC project/Occupancy testing"
+setwd(wd_model)
 elevation <- raster("elevation.tif")
 fs <- raster("forest_score.tif")
 d_roads <- raster("roads_distance_30m.tif")
-#covariates_stacked <- stack(d_roads,d_water,d_villages)
-#names(covariates_stacked) <- c("d_roads", "d_water","d_villages")
 
 # extract values/covariates from rasters/stracked raster #
-covs <- as.data.frame(extract(covariates_stacked,ct_points))
-covs_table <- cbind(CTtable[,seq(1, 2)],   #have no clue why CTtable$station doesnt work
-                    d_roads=covs$d_roads,
-                    d_water=covs$d_water,
-                    d_villages=covs$d_villages)
+covs_elevation <- as.data.frame(extract(elevation,ct_points))
+covs_fs <- as.data.frame(extract(fs,ct_points))
+covs_roads <- as.data.frame(extract(d_roads,ct_points))
+
+covs_table <- cbind(station = CTtable$station,   
+                    elevation=covs_elevation[,1],fs=covs_fs[,1],d_roads=covs_roads[,1])
+covs_table <- as.data.frame(covs_table)                    
+
+setwd(wd)
 write.csv(covs_table, file="gis_covariates.csv")
 
+
 ### bulding models ###
+library(unmarked)
+setwd(wd_model)
 # load data
-rec.table <- read.csv("recordtable_test.csv")
-rec.table$DateTimeOriginal   <- strptime(paste(rec.table$Date, rec.table$Time), format = "%m/%d/%Y %H:%M", tz = "UTC")
+rec.table <- read.csv("record_table_60min_deltaT_2019-09-15.csv")
+#rec.table$DateTimeOriginal   <- strptime(paste(rec.table$Date, rec.table$Time), format = "%m/%d/%Y %H:%M", tz = "UTC")
 colnames(rec.table)[colnames(rec.table) == "station"] <- "Station"
 #colnames(rec.table)[colnames(rec.table) == "species"] <- "Species"
 
-CTtable <- read.csv("LGXM_CT_infoDot1.csv")
+CTtable <- read_excel("datatable_Nui Chua_grid 2.xlsx", sheet = "station info")
+CTtable <- as.data.frame(CTtable)
 colnames(CTtable)[colnames(CTtable) == "station"] <- "Station"
 #date.format.old <- "%m/%d/%Y"  
 #CTtable$Date_set     <- as.Date(CTtable$Date_setup , format = date.format.old)
 #CTtable$Date_retrieved <- as.Date(CTtable$Date_retrieval, format = date.format.old)
 
-covs_gis <- read.csv("gis_covariates.csv")
+covs_table <- read.csv("gis_covariates.csv")
 
 # scale numeric values
 
-covtable <- cbind(d_roads=covs_gis$d_roads,d_water=covs_gis$d_water,d_villages=covs_gis$d_villages)
-covtable_scaled <- scale(covtable)
+covtable_scaled <- scale(covs_table[,seq(3,5)])
 covtable_scaled <- as.data.frame(covtable_scaled)
 
 
@@ -248,7 +252,7 @@ covtable_scaled <- as.data.frame(covtable_scaled)
 camop2 <- cameraOperation(CTtable, 
                           stationCol = "Station",
                           allCamsOn = TRUE,
-                          setupCol = "date_setup", 
+                          setupCol = "date_setting", 
                           retrievalCol = "date_retrieval", 
                           hasProblems = FALSE,
                           dateFormat = "%Y-%m-%d",
@@ -261,23 +265,27 @@ detHist1 <- detectionHistory(recordTable       = rec.table,
                              speciesCol        = "Species",
                              recordDateTimeCol = "DateTimeOriginal",
                              occasionLength    = 10,
-                             minActiveDaysPerOccasion = 0, ########  IMPORTANT
+                             maxNumberDays = 120,
+                             minActiveDaysPerOccasion = 0, 
                              species           = "Ferret badger",
-                             includeEffort     = TRUE, ########  NEED DOUBLE CHECK
+                             includeEffort     = FALSE,
                              scaleEffort       = FALSE,
                              day1              = "station",
-                             timeZone          = "Asian/Saigon")
+                             timeZone          = "Asia/Saigon")
 
 
 uf_occu1 <- unmarkedFrameOccu( y        = detHist1$detection_history,
-                               siteCovs = covtable_scaled,
-                               obsCovs  = list(effort = as.data.frame(detHist1$effort))
+                               siteCovs = covtable_scaled
+                               #obsCovs  = list(effort = as.data.frame(detHist1$effort))
 )
 
-m1 <- occu(~ effort ~d_roads, data=uf_occu1)  
-m2 <- occu(~ effort ~d_water, data=uf_occu1)
-m3 <- occu(~ effort ~d_villages, data=uf_occu1)
-m4 <- occu(~ effort ~d_roads+d_water+d_villages, data=uf_occu1)
+m1 <- occu(~ 1 ~elevation, data=uf_occu1)  
+m2 <- occu(~ 1 ~fs, data=uf_occu1)
+m3 <- occu(~ 1 ~d_roads, data=uf_occu1)
+m4 <- occu(~ 1 ~elevation + fs, data=uf_occu1)  
+m5 <- occu(~ 1 ~elevation + d_roads, data=uf_occu1)
+m6 <- occu(~ 1 ~fs + d_roads, data=uf_occu1)
+m7 <- occu(~ 1 ~fs + d_roads + elevation, data=uf_occu1)
 
 ##### CREATE PREDICTION MAP ####
 
@@ -286,26 +294,17 @@ elevation <- raster("elevation.tif")
 fs <- raster("forest_score.tif")
 d_roads <- raster("roads_distance_30m.tif")
 
-#get covariates value for prediction (e.g. d_roads)
-dat4plot <- data.frame(d_roads=scale(values(d_roads)),
-                       d_water=scale(values(d_water)),
-                       d_villages=scale(values(d_villages)))
+#get covariates value for prediction (e.g. d_roads) #
+dat4plot <- data.frame(elevation=scale(values(elevation)),
+                       #fs=scale(values(fs)),
+                       d_roads=scale(values(d_roads)))
 
-# predict occupancy 
+# predict occupancy # 
 predict_m1 <- predict(m1, newdata=dat4plot, type="state")
-#predict_m2 <- predict(m2, newdata=dat4plot, type="state")
-#predict_m3 <- predict(m3, newdata=dat4plot, type="state")
-#predict_m4 <- predict(m4, newdata=dat4plot, type="state")
 
-# create empty prediction rasters and fill it with predicted values
+
+# create empty prediction rasters and fill it with predicted values #
 prediction_raster_m1 <- raster(d_roads)
-#prediction_raster_m2 <- raster(d_roads)
-#prediction_raster_m3 <- raster(d_roads)
-#prediction_raster_m4 <- raster(d_roads)
-
 values(prediction_raster_m1) <- predict_m1$Predicted
-#values(prediction_raster_m2) <- predict_m2$Predicted
-#values(prediction_raster_m3) <- predict_m3$Predicted
-#values(prediction_raster_m4) <- predict_m4$Predicted
 
 #writeRaster(prediction_raster_m1, file="prediction_map_with_effort_d_roads", overwrite=TRUE)
