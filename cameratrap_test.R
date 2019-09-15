@@ -287,7 +287,7 @@ m5 <- occu(~ 1 ~elevation + d_roads, data=uf_occu1)
 m6 <- occu(~ 1 ~fs + d_roads, data=uf_occu1)
 m7 <- occu(~ 1 ~fs + d_roads + elevation, data=uf_occu1)
 
-##### CREATE PREDICTION MAP ####
+####################################### CREATE PREDICTION MAP ###################################
 
 #load rasters
 elevation <- raster("elevation.tif")
