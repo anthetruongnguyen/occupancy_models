@@ -96,19 +96,18 @@ rc.table <- recordTable(inDir,
 )
 
 ###create detection plots and shapfiles###
-
 library(readxl)
-CTtable <- read_excel("PMNP CT data tables_PhaseI&II_22Jul19", sheet = 'Sheet1')
+CTtable <- read_excel("datatable_Nui Chua_grid 2.xlsx", sheet = 'station info')
 CTtable <- data.frame(CTtable)
-recordTable <- read.csv("record_table_60min_deltaT_2019-06-11.csv")
+recordTable <- read.csv("record_table_60min_deltaT_2019-09-15.csv")
 recordTable <- data.frame(recordTable)
 
 #recordTable$Species[recordTable$Species == "Red cheeked Squirrel"] <- "Squirrel" ## repace red-cheeked squirrel as squirrel
 
 det.map <- detectionMaps(CTtable,
                          recordTable = recordTable,
-                         Xcol  = "UTM_N",
-                         Ycol = "UTM_E",
+                         Xcol  = "X",
+                         Ycol = "Y",
                          stationCol = "station",
                          speciesCol = "Species",
                          richnessPlot = TRUE,
@@ -131,7 +130,7 @@ det.map <- detectionMaps(CTtable,
 
 Cam.op <- cameraOperation(CTtable, 
                           stationCol = "station", 
-                          setupCol = "date_setup", 
+                          setupCol = "date_setting", 
                           retrievalCo = "date_retrieval", 
                           hasProblems = FALSE,
                           dateFormat = "%Y-%m-%d", 
@@ -144,7 +143,7 @@ report <- surveyReport (recordTable,
                         CTtable,
                         speciesCol           = "Species",
                         stationCol           = "station",
-                        setupCol             = "date_setup",
+                        setupCol             = "date_setting",
                         retrievalCol         = "date_retrieval",
                         CTDateFormat         = "%Y-%m-%d", 
                         recordDateTimeCol    = "DateTimeOriginal",
@@ -152,9 +151,37 @@ report <- surveyReport (recordTable,
                         sinkpath             = getwd())
 
 ### activity ###
+acti.sp1 <- activityDensity(recordTable, 
+                species = "Common palm civet",
+                allSpecies = FALSE,
+                speciesCol = "Species",
+                recordDateTimeCol = "DateTimeOriginal",
+                recordDateTimeFormat = "%Y-%m-%d %H:%M:%S",
+                plotR = TRUE, 
+                writePNG = FALSE, 
+                plotDirectory, 
+                createDir = FALSE, 
+                pngMaxPix = 1000,
+                add.rug = TRUE
+)
 
 ### activity overlap ###
-
+acti.sp1.sp2 <- activityOverlap(recordTable, 
+                                speciesA = "Common palm civet",
+                                speciesB = "Ferret badger",
+                                speciesCol = "Species",
+                                recordDateTimeCol = "DateTimeOriginal",
+                                recordDateTimeFormat = "%Y-%m-%d %H:%M:%S",
+                                plotR = TRUE, 
+                                writePNG = FALSE, 
+                                addLegend = TRUE,
+                                legendPosition = "topleft",
+                                plotDirectory, 
+                                createDir = FALSE, 
+                                pngMaxPix = 1000,
+                                add.rug = TRUE
+                               
+)
 
 
 ################################## OCCUPANCY MODELS ##############################################
