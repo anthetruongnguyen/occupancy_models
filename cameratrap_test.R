@@ -95,3 +95,20 @@ rc.table <- recordTable(inDir,
                         #additionalMetadataTags = "SerialNumber",
                         removeDuplicateRecords = TRUE
 )
+
+rc.table <- recordTable(inDir,
+                        IDfrom = "directory",
+                        cameraID = "filename",
+                        camerasIndependent = FALSE,
+                        minDeltaTime = 60,
+                        deltaTimeComparedTo = "lastRecord",
+                        timeZone = "Asia/Saigon",
+                        stationCol = "station",
+                        exclude,
+                        writecsv = TRUE,
+                        outDir, 
+                        #metadataHierarchyDelimitor = "|",
+                        #metadataSpeciesTag = "Species",
+                        #additionalMetadataTags = "SerialNumber",
+                        removeDuplicateRecords = TRUE
+)
