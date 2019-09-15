@@ -59,4 +59,39 @@ createSpeciesFolders(inDir= "rename",
                      species, 
                      removeFolders = FALSE)
 
-t <- 0
+###append species names###
+wd_images_renamed <- ("D:/Dropbox (ScreenForBio)/Field Data/Vietnam 2017-2018/Camera Trap Photos/Pu Mat NP_coarse grid/renamed")
+
+appendSpeciesNames(inDir = wd_images_renamed, 
+                   IDfrom = "directory",
+                   hasCameraFolders = TRUE,
+                   #metadataSpeciesTag,
+                   #metadataHierarchyDelimitor = "|",
+                   removeNames = TRUE
+                   #writecsv = FALSE
+)
+###RECORD DATA###
+
+exclude = c("Blank", "Ranger", "Researcher", "Retrieval", "Setting", 
+            "Unidentified animal", "Unidentified bird", 
+            "Unidentified macaque", "Unidentified muntjac", "Unidentified pheasant",
+            "Unidentified flying squirrel")
+inDir = "identified"
+outDir = "output"
+
+rc.table <- recordTable(inDir,
+                        IDfrom = "directory",
+                        cameraID = "filename",
+                        camerasIndependent = FALSE,
+                        minDeltaTime = 60,
+                        deltaTimeComparedTo = "lastRecord",
+                        timeZone = "Asia/Saigon",
+                        stationCol = "station",
+                        exclude,
+                        writecsv = TRUE,
+                        outDir, 
+                        #metadataHierarchyDelimitor = "|",
+                        #metadataSpeciesTag = "Species",
+                        #additionalMetadataTags = "SerialNumber",
+                        removeDuplicateRecords = TRUE
+)
