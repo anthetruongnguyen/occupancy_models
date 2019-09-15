@@ -59,5 +59,4 @@ createSpeciesFolders(inDir= "rename",
                      species, 
                      removeFolders = FALSE)
 
-t<- 11111
-t<- 2222
+t <- 0
