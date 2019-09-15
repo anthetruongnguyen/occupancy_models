@@ -60,4 +60,10 @@ createSpeciesFolders(inDir= "rename",
                      removeFolders = FALSE)
 
 
-t <- 12
+
+createSpeciesFolders(inDir= "rename", 
+                     hasCameraFolders=TRUE,
+                     species, 
+                     removeFolders = FALSE)
+
+
