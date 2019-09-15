@@ -67,3 +67,8 @@ createSpeciesFolders(inDir= "rename",
                      removeFolders = FALSE)
 
 
+createSpeciesFolders(inDir= "rename", 
+                     hasCameraFolders=TRUE,
+                     species, 
+                     removeFolders = FALSE)
+
