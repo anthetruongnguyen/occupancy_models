@@ -95,3 +95,5 @@ rc.table <- recordTable(inDir,
                         #additionalMetadataTags = "SerialNumber",
                         removeDuplicateRecords = TRUE
 )
+
+t<- 123456
